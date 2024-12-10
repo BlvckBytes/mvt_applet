@@ -47,7 +47,7 @@
           temporaryLabels = [];
         };
 
-        const solveDerivativeAbscissaAndMakePoint = (pointLabel, slopeValueLabel, minXValueLabel, maxXValueLabel, aliveListener) => {
+        const solveDerivativeAbscissaAndMakePoint = (pointLabel, slopeValueLabel, minXValueLabel, maxXValueLabel) => {
           return registerTemporaryLabels(
             api.evalCommandGetLabels(
               `${pointLabel} = Point({Element(` +
@@ -56,8 +56,7 @@
                   `NSolutions(f' = ${slopeValueLabel})` +
                 ')' +
               ', 1), 0})'
-            ),
-            aliveListener
+            )
           );
         };
 
@@ -130,6 +129,16 @@
           makeTangentSegment(
             `D${divisionIndex}`, abscissaPointLabel, secantSlopeLabel,
             label => api.setColor(label, 255, 0, 255)
+          );
+
+          const fPrimePointLabel = registerTemporaryLabels(
+            api.evalCommandGetLabels(`F_{μ${divisionIndex}} = (x(${abscissaPointLabel}), f'(x(${abscissaPointLabel})))`),
+            label => api.setLabelVisible(label, false)
+          );
+
+          registerTemporaryLabels(
+            api.evalCommandGetLabels(`V_{μ${divisionIndex}} = Segment(${fPrimePointLabel}, ${abscissaPointLabel})`),
+            label => api.setLabelVisible(label, false)
           );
         };
 
@@ -217,12 +226,12 @@
           // TODO: This could most definitely use some async-await de-nesting, ^^"
 
           registerTemporaryLabels(
-            api.evalCommandGetLabels(`Point({x(B), y(${derivativePointLabel})})`),
+            api.evalCommandGetLabels(`Q_{B'} = Point({x(B), y(${derivativePointLabel})})`),
             polygonPointBPrimeLabel => {
               api.setVisible(polygonPointBPrimeLabel, false);
 
               registerTemporaryLabels(
-                api.evalCommandGetLabels(`Point({x(A), y(${derivativePointLabel})})`),
+                api.evalCommandGetLabels(`Q_{A'} = Point({x(A), y(${derivativePointLabel})})`),
                 polygonPointAPrimeLabel => {
                   api.setVisible(polygonPointAPrimeLabel, false);
 
