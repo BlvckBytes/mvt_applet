@@ -8,7 +8,7 @@ const onAppletInit = async (api) => {
   let unhandledAliveCallLabels = [];
   let aliveListenerByLabel = {};
 
-  const evaluateCommand = (command, secondaryAliveListener, isPermanent) => {
+  const executeCreation = (command, secondaryAliveListener, isPermanent) => {
     return new Promise((resolve, reject) => {
       // Need to be able to tell apart main- from secondary labels
       if (command.includes('\n')) {
@@ -127,7 +127,7 @@ const onAppletInit = async (api) => {
     for (const groupKey in labelGroups) {
       const labelGroup = labelGroups[groupKey];
 
-      const checkboxLabel = await evaluateCommand(`b_g_{${++groupIndex}} = Checkbox()`, null, true);
+      const checkboxLabel = await executeCreation(`b_g_{${++groupIndex}} = Checkbox()`, null, true);
       api.setCaption(checkboxLabel, labelGroup.title);
       api.setValue(checkboxLabel, 1);
       api.evalCommand(`SetCoords(${checkboxLabel}, 5, ${controlYOffset})`);
@@ -154,7 +154,7 @@ const onAppletInit = async (api) => {
   };
 
   const solveDerivativeAbscissaAndMakePoint = (pointLabel, slopeValueLabel, minXValueLabel, maxXValueLabel) => {
-    return evaluateCommand(
+    return executeCreation(
       `${pointLabel} = Point({Element(` +
         'KeepIf(' +
           `x >= x(${minXValueLabel}) && x <= x(${maxXValueLabel}),`+
@@ -165,7 +165,7 @@ const onAppletInit = async (api) => {
   };
 
   const makeTangentSegment = async (labelNamePart, abscissaPointLabel, slopeLabel, pointAndSegmentLabelCallback) => {
-    const tangentFunctionLabel = await evaluateCommand(`t_{${labelNamePart}}(x) = ${slopeLabel} * (x - x(${abscissaPointLabel})) + f(x(${abscissaPointLabel}))`);
+    const tangentFunctionLabel = await executeCreation(`t_{${labelNamePart}}(x) = ${slopeLabel} * (x - x(${abscissaPointLabel})) + f(x(${abscissaPointLabel}))`);
 
     api.setVisible(tangentFunctionLabel, false);
 
@@ -187,20 +187,20 @@ const onAppletInit = async (api) => {
       l/sqrt((4*k^2 + 4)) = a
     */
     const tangentLength = .5;
-    const segmentDeltaXLabel = await evaluateCommand(`a_{${labelNamePart}} = ${tangentLength} / sqrt((4*${slopeLabel}^2 + 4))`);
+    const segmentDeltaXLabel = await executeCreation(`a_{${labelNamePart}} = ${tangentLength} / sqrt((4*${slopeLabel}^2 + 4))`);
 
     const sX = `x(${abscissaPointLabel}) - ${segmentDeltaXLabel}`;
     const eX = `x(${abscissaPointLabel}) + ${segmentDeltaXLabel}`;
 
     // I've tried to simply plot the function t(x) in [sX;eX], but got horrible lag - thus, let's instantiate a segment manually
-    const segmentLabel = await evaluateCommand(`t_s_{${labelNamePart}} = Segment((${sX}, ${tangentFunctionLabel}(${sX})), (${eX}, ${tangentFunctionLabel}(${eX})))`);
+    const segmentLabel = await executeCreation(`t_s_{${labelNamePart}} = Segment((${sX}, ${tangentFunctionLabel}(${sX})), (${eX}, ${tangentFunctionLabel}(${eX})))`);
 
     api.setLabelVisible(segmentLabel, false);
 
     if (pointAndSegmentLabelCallback)
       pointAndSegmentLabelCallback(segmentLabel);
 
-    const pointLabel = await evaluateCommand(`T_{${labelNamePart}} = Point({x(${abscissaPointLabel}), f(x(${abscissaPointLabel}))})`);
+    const pointLabel = await executeCreation(`T_{${labelNamePart}} = Point({x(${abscissaPointLabel}), f(x(${abscissaPointLabel}))})`);
 
     api.setLabelVisible(pointLabel, false);
 
@@ -209,12 +209,12 @@ const onAppletInit = async (api) => {
   };
 
   const setupDivisionAndGetSecantSlopeLabel = async (divisionIndex, previousPointLabel, currentPointLabel) => {
-    const divisionSecantLabel = await evaluateCommand(`S_{D${divisionIndex}} = Segment(${previousPointLabel}, ${currentPointLabel})`);
+    const divisionSecantLabel = await executeCreation(`S_{D${divisionIndex}} = Segment(${previousPointLabel}, ${currentPointLabel})`);
 
     api.setLabelVisible(divisionSecantLabel, false),
     registerGroupMember(divisionSecantLabel, labelGroups.GROUP_DIVISION_SECANT);
 
-    const secantSlopeLabel = await evaluateCommand(`s_{D${divisionIndex}} = (y(${previousPointLabel}) - y(${currentPointLabel})) / (x(${previousPointLabel}) - x(${currentPointLabel}))`);
+    const secantSlopeLabel = await executeCreation(`s_{D${divisionIndex}} = (y(${previousPointLabel}) - y(${currentPointLabel})) / (x(${previousPointLabel}) - x(${currentPointLabel}))`);
 
     const abscissaPointLabel = await solveDerivativeAbscissaAndMakePoint(`μ_{${divisionIndex}}`, secantSlopeLabel, previousPointLabel, currentPointLabel);
 
@@ -225,12 +225,12 @@ const onAppletInit = async (api) => {
       label => registerGroupMember(label, labelGroups.GROUP_DIVISION_TANGENT)
     );
 
-    const fPrimePointLabel = await evaluateCommand(`F_{μ${divisionIndex}} = (x(${abscissaPointLabel}), f'(x(${abscissaPointLabel})))`);
+    const fPrimePointLabel = await executeCreation(`F_{μ${divisionIndex}} = (x(${abscissaPointLabel}), f'(x(${abscissaPointLabel})))`);
 
     api.setLabelVisible(fPrimePointLabel, false)
     registerGroupMember(fPrimePointLabel, labelGroups.GROUP_MU_ORDINATES);
 
-    const fPrimeLineLabel = await evaluateCommand(`V_{μ${divisionIndex}} = Segment(${fPrimePointLabel}, ${abscissaPointLabel})`);
+    const fPrimeLineLabel = await executeCreation(`V_{μ${divisionIndex}} = Segment(${fPrimePointLabel}, ${abscissaPointLabel})`);
 
     api.setLabelVisible(fPrimeLineLabel, false)
     registerGroupMember(fPrimeLineLabel, labelGroups.GROUP_MU_ORDINATES);
@@ -247,14 +247,14 @@ const onAppletInit = async (api) => {
 
     // One more division, as the end of the last is the beginning of n+1
     for (let i = 1; i <= numberOfDivisions + 1; ++i) {
-      const abscissaLabel = await evaluateCommand(`x_{D${i}} = x_{AB}(${i})`);
+      const abscissaLabel = await executeCreation(`x_{D${i}} = x_{AB}(${i})`);
 
-      const divisionPointLabel = await evaluateCommand(`F_{D${i}} = (${abscissaLabel}, f(${abscissaLabel}))`);
+      const divisionPointLabel = await executeCreation(`F_{D${i}} = (${abscissaLabel}, f(${abscissaLabel}))`);
 
       registerGroupMember(divisionPointLabel, labelGroups.GROUP_DIVISION);
       api.setLabelVisible(divisionPointLabel, false)
 
-      const divisionLineLabel = await evaluateCommand(`V_{D${i}} = Segment((x(${divisionPointLabel}), 0), ${divisionPointLabel})`);
+      const divisionLineLabel = await executeCreation(`V_{D${i}} = Segment((x(${divisionPointLabel}), 0), ${divisionPointLabel})`);
 
       registerGroupMember(divisionLineLabel, labelGroups.GROUP_DIVISION);
       api.setLabelVisible(divisionLineLabel, false)
@@ -268,12 +268,12 @@ const onAppletInit = async (api) => {
         firstPointLabel = divisionPointLabel;
 
       if (numberOfDivisions != 1 && i == numberOfDivisions + 1) {
-        const intervalSecantLabel = await evaluateCommand(`S_I = Segment(${firstPointLabel}, ${divisionPointLabel})`);
+        const intervalSecantLabel = await executeCreation(`S_I = Segment(${firstPointLabel}, ${divisionPointLabel})`);
 
         registerGroupMember(intervalSecantLabel, labelGroups.GROUP_INTERVAL_SECANT);
         api.setLabelVisible(intervalSecantLabel, false);
 
-        const slopeLevelTermLabel = await evaluateCommand(`s_G = (${secantSlopeLabels.join("+")})/${numberOfDivisions}`);
+        const slopeLevelTermLabel = await executeCreation(`s_G = (${secantSlopeLabels.join("+")})/${numberOfDivisions}`);
 
         levelTermAbscissaPointLabel = await solveDerivativeAbscissaAndMakePoint("μ", slopeLevelTermLabel, "A", "B");
 
@@ -289,13 +289,13 @@ const onAppletInit = async (api) => {
         levelTermAbscissaPointLabel = "μ_1";
     }
 
-    const derivativePointLabel = await evaluateCommand(`L_{f'} = Point({x(${levelTermAbscissaPointLabel}), f'(x(${levelTermAbscissaPointLabel}))})`);
+    const derivativePointLabel = await executeCreation(`L_{f'} = Point({x(${levelTermAbscissaPointLabel}), f'(x(${levelTermAbscissaPointLabel}))})`);
 
     if (levelTermAbscissaPointLabel != "μ_1") {
       registerGroupMember(derivativePointLabel, labelGroups.GROUP_LEVEL_TERM);
       api.setLabelVisible(derivativePointLabel, false);
 
-      const derivativeLineLabel = await evaluateCommand(`V_{f'} = Segment(${derivativePointLabel}, ${levelTermAbscissaPointLabel})`);
+      const derivativeLineLabel = await executeCreation(`V_{f'} = Segment(${derivativePointLabel}, ${levelTermAbscissaPointLabel})`);
 
       registerGroupMember(derivativeLineLabel, labelGroups.GROUP_LEVEL_TERM);
       api.setLabelVisible(derivativeLineLabel, false);
@@ -304,13 +304,13 @@ const onAppletInit = async (api) => {
     else
       api.setVisible(derivativePointLabel, false);
 
-    const polygonPointAPrimeLabel = await evaluateCommand(`Q_{A'} = Point({x(A), y(${derivativePointLabel})})`);
+    const polygonPointAPrimeLabel = await executeCreation(`Q_{A'} = Point({x(A), y(${derivativePointLabel})})`);
     api.setVisible(polygonPointAPrimeLabel, false);
 
-    const polygonPointBPrimeLabel = await evaluateCommand(`Q_{B'} = Point({x(B), y(${derivativePointLabel})})`);
+    const polygonPointBPrimeLabel = await executeCreation(`Q_{B'} = Point({x(B), y(${derivativePointLabel})})`);
     api.setVisible(polygonPointBPrimeLabel, false);
 
-    const polygonLabel = await evaluateCommand(
+    const polygonLabel = await executeCreation(
       `Q_{f'} = Polygon(A, B, ${polygonPointBPrimeLabel}, ${polygonPointAPrimeLabel})`,
       polygonVertexLabel => api.setLabelVisible(polygonVertexLabel, false)
     );
@@ -324,7 +324,7 @@ const onAppletInit = async (api) => {
   await setupGroupCheckboxes();
 
   // Number of equally sized divisions between A and B
-  const sliderLabel = await evaluateCommand("k = Slider(1, 6, 1)", null, true);
+  const sliderLabel = await executeCreation("k = Slider(1, 6, 1)", null, true);
 
   controlYOffset += 50;
 
@@ -347,34 +347,34 @@ const onAppletInit = async (api) => {
     previousSliderValue = currentSliderValue;
   });
 
-  const fLabel = await evaluateCommand("f(x) = 1/4 * x^3 + 1", null, true);
+  const fLabel = await executeCreation("f(x) = 1/4 * x^3 + 1", null, true);
 
   registerGroupMember(fLabel, labelGroups.GROUP_FUNCTION, true);
 
-  const inputBoxLabel = await evaluateCommand(`InputBox(${fLabel})`, null, true);
+  const inputBoxLabel = await executeCreation(`InputBox(${fLabel})`, null, true);
 
   controlYOffset += 50;
 
   api.evalCommand(`SetCoords(${inputBoxLabel}, 10, ${controlYOffset})`);
   api.setCaption(inputBoxLabel, "f(x)");
 
-  const fPrimeLabel = await evaluateCommand(`f'(x) = Derivative(${fLabel})`, null, true);
+  const fPrimeLabel = await executeCreation(`f'(x) = Derivative(${fLabel})`, null, true);
 
   registerGroupMember(fPrimeLabel, labelGroups.GROUP_DERIVATIVE, true);
 
   // Constrain points to coincide with the x-axis (y=0, x=variable)
-  await evaluateCommand("a = -1", null, true);
-  await evaluateCommand("b = 1", null, true);
-  await evaluateCommand(`A = (a, y(yAxis))`, null, true);
-  await evaluateCommand(`B = (b, y(yAxis))`, null, true);
+  await executeCreation("a = -1", null, true);
+  await executeCreation("b = 1", null, true);
+  await executeCreation(`A = (a, y(yAxis))`, null, true);
+  await executeCreation(`B = (b, y(yAxis))`, null, true);
 
-  const derivativeAreaLabel = await evaluateCommand(`A_{f'} = Integral(${fPrimeLabel}, x(A), x(B))`, null, true);
+  const derivativeAreaLabel = await executeCreation(`A_{f'} = Integral(${fPrimeLabel}, x(A), x(B))`, null, true);
 
   api.setLabelVisible(derivativeAreaLabel, false);
   registerGroupMember(derivativeAreaLabel, labelGroups.GROUP_IRREGULAR, true);
   api.setFilling(derivativeAreaLabel, .3);
 
-  const beginningAbscissaLabel = await evaluateCommand(`x_{AB}(i) = x(A) + (x(B) - x(A))/${sliderLabel} * (i-1)`, null, true);
+  const beginningAbscissaLabel = await executeCreation(`x_{AB}(i) = x(A) + (x(B) - x(A))/${sliderLabel} * (i-1)`, null, true);
 
   api.setVisible(beginningAbscissaLabel, false);
 
