@@ -87,6 +87,8 @@ const onAppletInit = async (api) => {
   // Scene definition
   // ================================================================================
 
+  let controlYOffset = 0;
+
   const labelGroups = {
     GROUP_FUNCTION:           { color: [  0, 208, 245], title: "Function",           temporaryMembers: [], permanentMembers: [] },
     GROUP_DERIVATIVE:         { color: [255,   0,   0], title: "Derivative",         temporaryMembers: [], permanentMembers: [] },
@@ -125,6 +127,8 @@ const onAppletInit = async (api) => {
       const checkboxLabel = await evaluateCommand(`b_g_{${++groupIndex}} = Checkbox()`, null, true);
       api.setCaption(checkboxLabel, labelGroup.title);
       api.setValue(checkboxLabel, 1);
+      api.evalCommand(`SetCoords(${checkboxLabel}, 5, ${controlYOffset})`);
+      controlYOffset += 32;
 
       api.registerObjectUpdateListener(checkboxLabel, () => {
         const visibility = api.getValue(checkboxLabel) == 1;
@@ -305,10 +309,14 @@ const onAppletInit = async (api) => {
     registerGroupMember(polygonLabel, labelGroups.GROUP_QUADRATURE);
   };
 
-  // Number of equally sized divisions between A and B
-  const sliderLabel = await evaluateCommand("k = Slider(1, 5, 1)", null, true);
+  await setupGroupCheckboxes();
 
-  api.evalCommand(`SetCoords(${sliderLabel}, 25, 420)`);
+  // Number of equally sized divisions between A and B
+  const sliderLabel = await evaluateCommand("k = Slider(1, 6, 1)", null, true);
+
+  controlYOffset += 50;
+
+  api.evalCommand(`SetCoords(${sliderLabel}, 25, ${controlYOffset})`);
 
   let previousSliderValue = api.getValue(sliderLabel);
 
@@ -340,7 +348,9 @@ const onAppletInit = async (api) => {
 
   const inputBoxLabel = await evaluateCommand(`InputBox(${fLabel})`, null, true);
 
-  api.evalCommand(`SetCoords(${inputBoxLabel}, 10, 470)`);
+  controlYOffset += 50;
+
+  api.evalCommand(`SetCoords(${inputBoxLabel}, 10, ${controlYOffset})`);
   api.setCaption(inputBoxLabel, "f(x)");
 
   const fPrimeLabel = await evaluateCommand(`f'(x) = Derivative(${fLabel})`, null, true);
@@ -362,8 +372,6 @@ const onAppletInit = async (api) => {
   const beginningAbscissaLabel = await evaluateCommand(`x_{AB}(i) = x(A) + (x(B) - x(A))/${sliderLabel} * (i-1)`, null, true);
 
   api.setVisible(beginningAbscissaLabel, false);
-
-  setupGroupCheckboxes();
 
   // Setup based on the initial slider's value
   setupDivisions(api.getValue(sliderLabel));
