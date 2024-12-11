@@ -91,22 +91,22 @@ const onAppletInit = async (api) => {
   let checkboxUpdateHandlers = [];
 
   const labelGroups = {
-    GROUP_FUNCTION:           { color: [  0, 208, 245], title: "Function",           temporaryMembers: [], permanentMembers: [] },
-    GROUP_DERIVATIVE:         { color: [255,   0,   0], title: "Derivative",         temporaryMembers: [], permanentMembers: [] },
-    GROUP_QUADRATURE:         { color: [  0, 255,   0], title: "Quadrature Area",    temporaryMembers: [], permanentMembers: [] },
-    GROUP_IRREGULAR:          { color: [255,   0,   0], title: "Irregular Area",     temporaryMembers: [], permanentMembers: [] },
-    GROUP_DIVISION:           { color: [245, 140,   0], title: "Division",           temporaryMembers: [], permanentMembers: [] },
-    GROUP_DIVISION_SECANT:    { color: [  0,   0,   0], title: "Division Secant",    temporaryMembers: [], permanentMembers: [] },
-    GROUP_INTERVAL_SECANT:    { color: [255,   0,   0], title: "Interval Secant",    temporaryMembers: [], permanentMembers: [] },
-    GROUP_DIVISION_TANGENT:   { color: [255,   0, 255], title: "Division Tangent",   temporaryMembers: [], permanentMembers: [] },
-    GROUP_LEVEL_TERM_TANGENT: { color: [128,   0, 255], title: "Level Term Tangent", temporaryMembers: [], permanentMembers: [] },
-    GROUP_LEVEL_TERM:         { color: [128,   0, 255], title: "Level Term",         temporaryMembers: [], permanentMembers: [] },
-    GROUP_MU_ABSCISSAS:       { color: [  0,   0,   0], title: "μ Abscissas",        temporaryMembers: [], permanentMembers: [] },
-    GROUP_MU_ORDINATES:       { color: [  0,   0,   0], title: "μ Ordinates",        temporaryMembers: [], permanentMembers: [] },
+    GROUP_FUNCTION:           { color: "#00D0F5", title: "Function",           temporaryMembers: [], permanentMembers: [] },
+    GROUP_DERIVATIVE:         { color: "#FF0000", title: "Derivative",         temporaryMembers: [], permanentMembers: [] },
+    GROUP_QUADRATURE:         { color: "#00FF00", title: "Quadrature Area",    temporaryMembers: [], permanentMembers: [] },
+    GROUP_IRREGULAR:          { color: "#FF0000", title: "Irregular Area",     temporaryMembers: [], permanentMembers: [] },
+    GROUP_DIVISION:           { color: "#F58CF5", title: "Division",           temporaryMembers: [], permanentMembers: [] },
+    GROUP_DIVISION_SECANT:    { color: "#000000", title: "Division Secant",    temporaryMembers: [], permanentMembers: [] },
+    GROUP_INTERVAL_SECANT:    { color: "#FF0000", title: "Interval Secant",    temporaryMembers: [], permanentMembers: [] },
+    GROUP_DIVISION_TANGENT:   { color: "#FF00FF", title: "Division Tangent",   temporaryMembers: [], permanentMembers: [] },
+    GROUP_LEVEL_TERM_TANGENT: { color: "#8000FF", title: "Level Term Tangent", temporaryMembers: [], permanentMembers: [] },
+    GROUP_LEVEL_TERM:         { color: "#8000FF", title: "Level Term",         temporaryMembers: [], permanentMembers: [] },
+    GROUP_MU_ABSCISSAS:       { color: "#000000", title: "μ Abscissas",        temporaryMembers: [], permanentMembers: [] },
+    GROUP_MU_ORDINATES:       { color: "#000000", title: "μ Ordinates",        temporaryMembers: [], permanentMembers: [] },
   };
 
   const registerGroupMember = (label, group, permanent) => {
-    api.setColor(label, group.color[0], group.color[1], group.color[2]);
+    api.evalCommand(`SetColor(${label}, "${group.color}")`);
 
     if (permanent === true)
       group.permanentMembers.push(label);
