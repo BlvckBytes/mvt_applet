@@ -307,6 +307,9 @@ const onAppletInit = async (api) => {
 
   // Number of equally sized divisions between A and B
   const sliderLabel = await evaluateCommand("k = Slider(1, 5, 1)", null, true);
+
+  api.evalCommand(`SetCoords(${sliderLabel}, 25, 420)`);
+
   let previousSliderValue = api.getValue(sliderLabel);
 
   api.registerObjectUpdateListener(sliderLabel, () => {
@@ -336,6 +339,8 @@ const onAppletInit = async (api) => {
   });
 
   const inputBoxLabel = await evaluateCommand(`InputBox(${fLabel})`, null, true);
+
+  api.evalCommand(`SetCoords(${inputBoxLabel}, 10, 470)`);
   api.setCaption(inputBoxLabel, "f(x)");
 
   const fPrimeLabel = await evaluateCommand(`f'(x) = Derivative(${fLabel})`, null, true);
