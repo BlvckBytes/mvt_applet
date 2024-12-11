@@ -98,6 +98,8 @@ const onAppletInit = async (api) => {
     GROUP_DIVISION_TANGENT:   { color: [255,   0, 255], title: "Division Tangent",   temporaryMembers: [], permanentMembers: [] },
     GROUP_LEVEL_TERM_TANGENT: { color: [128,   0, 255], title: "Level Term Tangent", temporaryMembers: [], permanentMembers: [] },
     GROUP_LEVEL_TERM:         { color: [128,   0, 255], title: "Level Term",         temporaryMembers: [], permanentMembers: [] },
+    GROUP_MU_ABSCISSAS:       { color: [  0,   0,   0], title: "μ Abscissas",        temporaryMembers: [], permanentMembers: [] },
+    GROUP_MU_ORDINATES:       { color: [  0,   0,   0], title: "μ Ordinates",        temporaryMembers: [], permanentMembers: [] },
   };
 
   const registerGroupMember = (label, group, permanent) => {
@@ -112,6 +114,28 @@ const onAppletInit = async (api) => {
   const clearAllGroupMembers = () => {
     for (const groupKey in labelGroups)
       labelGroups[groupKey].temporaryMembers = [];
+  };
+
+  const setupGroupCheckboxes = async () => {
+    let groupIndex = 0;
+
+    for (const groupKey in labelGroups) {
+      const labelGroup = labelGroups[groupKey];
+
+      const checkboxLabel = await evaluateCommand(`b_g_{${++groupIndex}} = Checkbox()`, null, true);
+      api.setCaption(checkboxLabel, labelGroup.title);
+      api.setValue(checkboxLabel, 1);
+
+      api.registerObjectUpdateListener(checkboxLabel, () => {
+        const visibility = api.getValue(checkboxLabel) == 1;
+
+        for (const temporaryMember of labelGroup.temporaryMembers)
+          api.setVisible(temporaryMember, visibility);
+
+        for (const permanentMember of labelGroup.permanentMembers)
+          api.setVisible(permanentMember, visibility);
+      });
+    }
   };
 
   const solveDerivativeAbscissaAndMakePoint = (pointLabel, slopeValueLabel, minXValueLabel, maxXValueLabel) => {
@@ -178,6 +202,8 @@ const onAppletInit = async (api) => {
 
     const abscissaPointLabel = await solveDerivativeAbscissaAndMakePoint(`μ_{${divisionIndex}}`, secantSlopeLabel, previousPointLabel, currentPointLabel);
 
+    registerGroupMember(abscissaPointLabel, labelGroups.GROUP_MU_ABSCISSAS);
+
     await makeTangentSegment(
       `D${divisionIndex}`, abscissaPointLabel, secantSlopeLabel,
       label => registerGroupMember(label, labelGroups.GROUP_DIVISION_TANGENT)
@@ -186,10 +212,12 @@ const onAppletInit = async (api) => {
     const fPrimePointLabel = await evaluateCommand(`F_{μ${divisionIndex}} = (x(${abscissaPointLabel}), f'(x(${abscissaPointLabel})))`);
 
     api.setLabelVisible(fPrimePointLabel, false)
+    registerGroupMember(fPrimePointLabel, labelGroups.GROUP_MU_ORDINATES);
 
     const fPrimeLineLabel = await evaluateCommand(`V_{μ${divisionIndex}} = Segment(${fPrimePointLabel}, ${abscissaPointLabel})`);
 
     api.setLabelVisible(fPrimeLineLabel, false)
+    registerGroupMember(fPrimeLineLabel, labelGroups.GROUP_MU_ORDINATES);
 
     return secantSlopeLabel
   };
@@ -268,22 +296,30 @@ const onAppletInit = async (api) => {
 
     const polygonLabel = await evaluateCommand(
       `Q_{f'} = Polygon(A, B, ${polygonPointBPrimeLabel}, ${polygonPointAPrimeLabel})`,
-      polygonVertexLabel => api.setVisible(polygonVertexLabel, false)
+      polygonVertexLabel => api.setLabelVisible(polygonVertexLabel, false)
     );
 
     api.setLabelVisible(polygonLabel, false);
-    registerGroupMember(polygonLabel, labelGroups.GROUP_QUADRATURE);
     api.setFilling(polygonLabel, .3);
+
+    registerGroupMember(polygonLabel, labelGroups.GROUP_QUADRATURE);
   };
 
   // Number of equally sized divisions between A and B
   const sliderLabel = await evaluateCommand("k = Slider(1, 5, 1)", null, true);
+  let previousSliderValue = api.getValue(sliderLabel);
 
-  api.registerObjectUpdateListener(sliderLabel, async () => {
-    deleteTemporaryObjects();
-    clearAllGroupMembers();
-    await setupDivisions(api.getValue(sliderLabel));
-    console.log(labelGroups);
+  api.registerObjectUpdateListener(sliderLabel, () => {
+    const currentSliderValue = api.getValue(sliderLabel);
+
+    // Moving the object around causes update-calls too; only re-render on value changes
+    if (currentSliderValue != previousSliderValue) {
+      deleteTemporaryObjects();
+      clearAllGroupMembers();
+      setupDivisions(currentSliderValue);
+    }
+
+    previousSliderValue = currentSliderValue;
   });
 
   const fLabel = await evaluateCommand("f(x) = 1/4 * x^3 + 1", null, true);
@@ -321,6 +357,8 @@ const onAppletInit = async (api) => {
   const beginningAbscissaLabel = await evaluateCommand(`x_{AB}(i) = x(A) + (x(B) - x(A))/${sliderLabel} * (i-1)`, null, true);
 
   api.setVisible(beginningAbscissaLabel, false);
+
+  setupGroupCheckboxes();
 
   // Setup based on the initial slider's value
   setupDivisions(api.getValue(sliderLabel));
