@@ -87,6 +87,17 @@ const onAppletInit = async (api) => {
   // Scene definition
   // ================================================================================
 
+  const applyFunctionColor        = label => api.setColor(label, 0, 208, 245);
+  const applyDerivativeColor      = label => api.setColor(label, 255, 0, 0);
+  const applyQuadratureColor      = label => api.setColor(label, 0, 255, 0);
+  const applyIntegralColor        = label => api.setColor(label, 255, 0, 0);
+  const applyDivisionColor        = label => api.setColor(label, 245, 140, 0);
+  const applyDivisionSecantColor  = label => api.setColor(label, 0, 0, 0);
+  const applyGlobalSecantColor    = label => api.setColor(label, 255, 0, 0);
+  const applyDivisionTangentColor = label => api.setColor(label, 255, 0, 255)
+  const applyLevelTermSecantColor = label => api.setColor(label, 128, 0, 255);
+  const applyLevelTermColor       = label => api.setColor(label, 128, 0, 255);
+
   const solveDerivativeAbscissaAndMakePoint = (pointLabel, slopeValueLabel, minXValueLabel, maxXValueLabel) => {
     return evaluateCommand(
       `${pointLabel} = Point({Element(` +
@@ -145,16 +156,13 @@ const onAppletInit = async (api) => {
     const divisionSecantLabel = await evaluateCommand(`S_{D${divisionIndex}} = Segment(${previousPointLabel}, ${currentPointLabel})`);
 
     api.setLabelVisible(divisionSecantLabel, false),
-    api.setColor(divisionSecantLabel, 0, 0, 0);
+    applyDivisionSecantColor(divisionSecantLabel);
 
     const secantSlopeLabel = await evaluateCommand(`s_{D${divisionIndex}} = (y(${previousPointLabel}) - y(${currentPointLabel})) / (x(${previousPointLabel}) - x(${currentPointLabel}))`);
 
     const abscissaPointLabel = await solveDerivativeAbscissaAndMakePoint(`μ_{${divisionIndex}}`, secantSlopeLabel, previousPointLabel, currentPointLabel);
 
-    await makeTangentSegment(
-      `D${divisionIndex}`, abscissaPointLabel, secantSlopeLabel,
-      label => api.setColor(label, 255, 0, 255)
-    );
+    await makeTangentSegment(`D${divisionIndex}`, abscissaPointLabel, secantSlopeLabel, applyDivisionTangentColor);
 
     const fPrimePointLabel = await evaluateCommand(`F_{μ${divisionIndex}} = (x(${abscissaPointLabel}), f'(x(${abscissaPointLabel})))`);
 
@@ -172,58 +180,61 @@ const onAppletInit = async (api) => {
 
     let previousPointLabel = null;
     let firstPointLabel = null;
-    let abscissaPointLabel = null;
+    let levelTermAbscissaPointLabel = null;
 
     // One more division, as the end of the last is the beginning of n+1
     for (let i = 1; i <= numberOfDivisions + 1; ++i) {
       const abscissaLabel = await evaluateCommand(`x_{D${i}} = x_{AB}(${i})`);
 
-      const pointLabel = await evaluateCommand(`F_{D${i}} = (${abscissaLabel}, f(${abscissaLabel}))`);
-      api.setLabelVisible(pointLabel, false)
+      const divisionPointLabel = await evaluateCommand(`F_{D${i}} = (${abscissaLabel}, f(${abscissaLabel}))`);
 
-      const lineLabel = await evaluateCommand(`V_{D${i}} = Segment((x(${pointLabel}), 0), ${pointLabel})`);
-      api.setLabelVisible(lineLabel, false)
+      applyDivisionColor(divisionPointLabel);
+      api.setLabelVisible(divisionPointLabel, false)
+
+      const divisionLineLabel = await evaluateCommand(`V_{D${i}} = Segment((x(${divisionPointLabel}), 0), ${divisionPointLabel})`);
+
+      applyDivisionColor(divisionLineLabel);
+      api.setLabelVisible(divisionLineLabel, false)
 
       if (previousPointLabel != null)
-        secantSlopeLabels.push(await setupDivisionAndGetSecantSlopeLabel(i - 1, previousPointLabel, pointLabel));
+        secantSlopeLabels.push(await setupDivisionAndGetSecantSlopeLabel(i - 1, previousPointLabel, divisionPointLabel));
 
-      previousPointLabel = pointLabel;
+      previousPointLabel = divisionPointLabel;
 
       if (firstPointLabel == null)
-        firstPointLabel = pointLabel;
+        firstPointLabel = divisionPointLabel;
 
       if (numberOfDivisions != 1 && i == numberOfDivisions + 1) {
-        const globalSecantLabel = await evaluateCommand(`S_G = Segment(${firstPointLabel}, ${pointLabel})`);
+        const globalSecantLabel = await evaluateCommand(`S_G = Segment(${firstPointLabel}, ${divisionPointLabel})`);
 
-        api.setColor(globalSecantLabel, 255, 0, 0);
+        applyGlobalSecantColor(globalSecantLabel);
         api.setLabelVisible(globalSecantLabel, false);
 
         const slopeLevelTermLabel = await evaluateCommand(`s_G = (${secantSlopeLabels.join("+")})/${numberOfDivisions}`);
 
-        abscissaPointLabel = await solveDerivativeAbscissaAndMakePoint(
-          "μ", slopeLevelTermLabel, "A", "B",
-          label => api.setColor(label, 128, 0, 255)
-        );
+        levelTermAbscissaPointLabel = await solveDerivativeAbscissaAndMakePoint("μ", slopeLevelTermLabel, "A", "B", applyLevelTermSecantColor);
 
-        await makeTangentSegment(
-          `G`, abscissaPointLabel, slopeLevelTermLabel,
-          label => api.setColor(label, 128, 0, 255)
-        );
+        await makeTangentSegment(`G`, levelTermAbscissaPointLabel, slopeLevelTermLabel, applyLevelTermSecantColor);
       }
 
       else
-        abscissaPointLabel = "μ_1";
+        levelTermAbscissaPointLabel = "μ_1";
     }
 
-    const derivativePointLabel = await evaluateCommand(`L_{f'} = Point({x(${abscissaPointLabel}), f'(x(${abscissaPointLabel}))})`);
+    const derivativePointLabel = await evaluateCommand(`L_{f'} = Point({x(${levelTermAbscissaPointLabel}), f'(x(${levelTermAbscissaPointLabel}))})`);
 
-    api.setColor(derivativePointLabel, 128, 0, 255);
-    api.setLabelVisible(derivativePointLabel, false);
+    if (levelTermAbscissaPointLabel != "μ_1") {
+      applyLevelTermColor(derivativePointLabel);
+      api.setLabelVisible(derivativePointLabel, false);
 
-    const derivativeLineLabel = await evaluateCommand(`V_{f'} = Segment(${derivativePointLabel}, ${abscissaPointLabel})`);
+      const derivativeLineLabel = await evaluateCommand(`V_{f'} = Segment(${derivativePointLabel}, ${levelTermAbscissaPointLabel})`);
 
-    api.setColor(derivativeLineLabel, 128, 0, 255);
-    api.setLabelVisible(derivativeLineLabel, false);
+      applyLevelTermColor(derivativeLineLabel);
+      api.setLabelVisible(derivativeLineLabel, false);
+    }
+
+    else
+      api.setVisible(derivativePointLabel, false);
 
     const polygonPointAPrimeLabel = await evaluateCommand(`Q_{A'} = Point({x(A), y(${derivativePointLabel})})`);
     api.setVisible(polygonPointAPrimeLabel, false);
@@ -237,7 +248,7 @@ const onAppletInit = async (api) => {
     );
 
     api.setLabelVisible(polygonLabel, false);
-    api.setColor(polygonLabel, 0, 255, 0);
+    applyQuadratureColor(polygonLabel);
     api.setFilling(polygonLabel, .3);
   };
 
@@ -250,6 +261,8 @@ const onAppletInit = async (api) => {
   });
 
   const fLabel = await evaluateCommand("f(x) = 1/4 * x^3 + 1", null, true);
+
+  applyFunctionColor(fLabel);
 
   api.registerObjectUpdateListener(fLabel, () => {
     deleteTemporaryObjects();
@@ -264,6 +277,8 @@ const onAppletInit = async (api) => {
 
   const fPrimeLabel = await evaluateCommand(`f'(x) = Derivative(${fLabel})`, null, true);
 
+  applyDerivativeColor(fPrimeLabel);
+
   // Constrain points to coincide with the x-axis (y=0, x=variable)
   await evaluateCommand("a = -1", null, true);
   await evaluateCommand("b = 1", null, true);
@@ -273,7 +288,7 @@ const onAppletInit = async (api) => {
   const derivativeAreaLabel = await evaluateCommand(`A_{f'} = Integral(${fPrimeLabel}, x(A), x(B))`, null, true);
 
   api.setLabelVisible(derivativeAreaLabel, false);
-  api.setColor(derivativeAreaLabel, 255, 0, 0);
+  applyIntegralColor(derivativeAreaLabel);
   api.setFilling(derivativeAreaLabel, .3);
 
   const beginningAbscissaLabel = await evaluateCommand(`x_{AB}(i) = x(A) + (x(B) - x(A))/${sliderLabel} * (i-1)`, null, true);
