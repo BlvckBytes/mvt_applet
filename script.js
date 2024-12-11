@@ -184,9 +184,10 @@ const onAppletInit = async (api) => {
       l^2/4   = a^2 * (k^2 + 1)
       l^2/(4*k^2 + 4)       = a^2
       sqrt(l^2/(4*k^2 + 4)) = a
+      l/sqrt((4*k^2 + 4)) = a
     */
     const tangentLength = .5;
-    const segmentDeltaXLabel = await evaluateCommand(`a_{${labelNamePart}} = sqrt(${tangentLength}^2 / (4*${slopeLabel}^2 + 4))`);
+    const segmentDeltaXLabel = await evaluateCommand(`a_{${labelNamePart}} = ${tangentLength} / sqrt((4*${slopeLabel}^2 + 4))`);
 
     const sX = `x(${abscissaPointLabel}) - ${segmentDeltaXLabel}`;
     const eX = `x(${abscissaPointLabel}) + ${segmentDeltaXLabel}`;
