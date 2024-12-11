@@ -350,17 +350,6 @@ const onAppletInit = async (api) => {
 
   registerGroupMember(fLabel, labelGroups.GROUP_FUNCTION, true);
 
-  api.registerObjectUpdateListener(fLabel, async () => {
-    deleteTemporaryObjects();
-    clearAllGroupMembers();
-
-    // Rebuild divisions only if the input-box successfully parsed a new expression for f
-    if (api.isDefined(fLabel)) {
-      await setupDivisions(api.getValue(sliderLabel));
-      applyAllGroupCheckboxes();
-    }
-  });
-
   const inputBoxLabel = await evaluateCommand(`InputBox(${fLabel})`, null, true);
 
   controlYOffset += 50;
