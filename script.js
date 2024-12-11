@@ -88,6 +88,7 @@ const onAppletInit = async (api) => {
   // ================================================================================
 
   let controlYOffset = 0;
+  let checkboxUpdateHandlers = [];
 
   const labelGroups = {
     GROUP_FUNCTION:           { color: [  0, 208, 245], title: "Function",           temporaryMembers: [], permanentMembers: [] },
@@ -119,6 +120,8 @@ const onAppletInit = async (api) => {
   };
 
   const setupGroupCheckboxes = async () => {
+    checkboxUpdateHandlers = [];
+
     let groupIndex = 0;
 
     for (const groupKey in labelGroups) {
@@ -130,7 +133,7 @@ const onAppletInit = async (api) => {
       api.evalCommand(`SetCoords(${checkboxLabel}, 5, ${controlYOffset})`);
       controlYOffset += 32;
 
-      api.registerObjectUpdateListener(checkboxLabel, () => {
+      const updateHandler = () => {
         const visibility = api.getValue(checkboxLabel) == 1;
 
         for (const temporaryMember of labelGroup.temporaryMembers)
@@ -138,8 +141,16 @@ const onAppletInit = async (api) => {
 
         for (const permanentMember of labelGroup.permanentMembers)
           api.setVisible(permanentMember, visibility);
-      });
+      };
+
+      api.registerObjectUpdateListener(checkboxLabel, updateHandler);
+      checkboxUpdateHandlers.push(updateHandler);
     }
+  };
+
+  const applyAllGroupCheckboxes = () => {
+    for (const updateHandler of checkboxUpdateHandlers)
+      updateHandler();
   };
 
   const solveDerivativeAbscissaAndMakePoint = (pointLabel, slopeValueLabel, minXValueLabel, maxXValueLabel) => {
@@ -320,14 +331,16 @@ const onAppletInit = async (api) => {
 
   let previousSliderValue = api.getValue(sliderLabel);
 
-  api.registerObjectUpdateListener(sliderLabel, () => {
+  api.registerObjectUpdateListener(sliderLabel, async () => {
     const currentSliderValue = api.getValue(sliderLabel);
 
     // Moving the object around causes update-calls too; only re-render on value changes
     if (currentSliderValue != previousSliderValue) {
       deleteTemporaryObjects();
       clearAllGroupMembers();
-      setupDivisions(currentSliderValue);
+
+      await setupDivisions(currentSliderValue);
+      applyAllGroupCheckboxes();
     }
 
     previousSliderValue = currentSliderValue;
@@ -337,13 +350,15 @@ const onAppletInit = async (api) => {
 
   registerGroupMember(fLabel, labelGroups.GROUP_FUNCTION, true);
 
-  api.registerObjectUpdateListener(fLabel, () => {
+  api.registerObjectUpdateListener(fLabel, async () => {
     deleteTemporaryObjects();
     clearAllGroupMembers();
 
     // Rebuild divisions only if the input-box successfully parsed a new expression for f
-    if (api.isDefined(fLabel))
-      setupDivisions(api.getValue(sliderLabel));
+    if (api.isDefined(fLabel)) {
+      await setupDivisions(api.getValue(sliderLabel));
+      applyAllGroupCheckboxes();
+    }
   });
 
   const inputBoxLabel = await evaluateCommand(`InputBox(${fLabel})`, null, true);
