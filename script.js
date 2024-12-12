@@ -117,41 +117,43 @@ const onAppletInit = async (api) => {
   };
 
   const clearAllGroupMembers = () => {
-    for (const groupKey in labelGroups)
-      labelGroups[groupKey].temporaryMembers = [];
+    const groupKeys = Object.keys(labelGroups);
+    for (let groupKeyIndex = 0; groupKeyIndex < groupKeys.length; ++groupKeyIndex)
+      labelGroups[groupKeys[groupKeyIndex]].temporaryMembers = [];
   };
 
   const setupGroupCheckboxes = async () => {
     checkboxUpdateHandlers = [];
 
-    let groupIndex = 0;
+    const groupKeys = Object.keys(labelGroups);
+    for (let groupKeyIndex = 0; groupKeyIndex < groupKeys.length; ++groupKeyIndex) {
+      const labelGroup = labelGroups[groupKeys[groupKeyIndex]];
 
-    for (const groupKey in labelGroups) {
-      const labelGroup = labelGroups[groupKey];
+      const groupIndex = controlYOffset / 32;
+      const groupOffset = controlYOffset;
+      controlYOffset += 32;
 
-      const checkboxLabel = await executeCreation(`b_g_{${++groupIndex}} = Checkbox()`, null, true);
+      const checkboxLabel = await executeCreation(`b_g_{${groupIndex}} = Checkbox()`, null, true);
       api.setLabelVisible(checkboxLabel, false);
       api.setValue(checkboxLabel, 1);
       api.setLayer(checkboxLabel, 9);
-      api.evalCommand(`SetCoords(${checkboxLabel}, 5, ${controlYOffset})`);
+      api.evalCommand(`SetCoords(${checkboxLabel}, 5, ${groupOffset})`);
 
-      const positionExpression = `AttachCopyToView((1,1), 1, (1,1), (0,0), (45,${controlYOffset} + 23), (0,0))`;
+      const positionExpression = `AttachCopyToView((1,1), 1, (1,1), (0,0), (45,${groupOffset} + 23), (0,0))`;
       const checkboxTextLabel = await executeCreation(`t_g_{${groupIndex}} = Text("${labelGroup.title}", ${positionExpression})`, null, true);
       api.evalCommand(`SetColor(${checkboxTextLabel}, "${labelGroup.labelTextColor}")`);
       api.evalCommand(`SetBackgroundColor(${checkboxTextLabel}, "${labelGroup.color}")`);
       api.setLayer(checkboxTextLabel, 9);
       api.setFixed(checkboxTextLabel, 1);
 
-      controlYOffset += 32;
-
       const updateHandler = () => {
         const visibility = api.getValue(checkboxLabel) == 1;
 
-        for (const temporaryMember of labelGroup.temporaryMembers)
-          api.setVisible(temporaryMember, visibility);
+        for (let i = 0; i < labelGroup.temporaryMembers.length; ++i)
+          api.setVisible(labelGroup.temporaryMembers[i], visibility);
 
-        for (const permanentMember of labelGroup.permanentMembers)
-          api.setVisible(permanentMember, visibility);
+        for (let i = 0; i < labelGroup.permanentMembers.length; ++i)
+          api.setVisible(labelGroup.permanentMembers[i], visibility);
       };
 
       api.registerObjectUpdateListener(checkboxLabel, updateHandler);
@@ -160,8 +162,8 @@ const onAppletInit = async (api) => {
   };
 
   const applyAllGroupCheckboxes = () => {
-    for (const updateHandler of checkboxUpdateHandlers)
-      updateHandler();
+    for (let i = 0; i < checkboxUpdateHandlers.length; ++i)
+      checkboxUpdateHandlers[i]();
   };
 
   const solveDerivativeAbscissaAndMakePoint = (pointLabel, slopeValueLabel, minXValueLabel, maxXValueLabel) => {
