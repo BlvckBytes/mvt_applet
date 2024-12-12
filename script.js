@@ -135,7 +135,7 @@ const onAppletInit = async (api) => {
       api.setLayer(checkboxLabel, 9);
       api.evalCommand(`SetCoords(${checkboxLabel}, 5, ${controlYOffset})`);
 
-      const positionExpression = `AttachCopyToView((2,2), 1, (2,2), (0,0), (45,${controlYOffset} + 23), (0,0))`;
+      const positionExpression = `AttachCopyToView((1,1), 1, (1,1), (0,0), (45,${controlYOffset} + 23), (0,0))`;
       const checkboxTextLabel = await executeCreation(`t_g_{${groupIndex}} = Text("${labelGroup.title}", ${positionExpression})`, null, true);
       api.evalCommand(`SetColor(${checkboxTextLabel}, "${labelGroup.labelTextColor}")`);
       api.evalCommand(`SetBackgroundColor(${checkboxTextLabel}, "${labelGroup.color}")`);
