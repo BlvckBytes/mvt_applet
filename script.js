@@ -221,11 +221,13 @@ const onAppletInit = async (api) => {
       pointAndSegmentLabelCallback(pointLabel);
   };
 
-  const setupDivisionAndGetSecantSlopeLabel = async (divisionIndex, previousPointLabel, currentPointLabel) => {
-    const divisionSecantLabel = await executeCreation(`S_{D${divisionIndex}} = Segment(${previousPointLabel}, ${currentPointLabel})`);
+  const setupDivisionAndGetSecantSlopeLabel = async (divisionIndex, numberOfDivisions, previousPointLabel, currentPointLabel) => {
+    if (numberOfDivisions != 1) {
+      const divisionSecantLabel = await executeCreation(`S_{D${divisionIndex}} = Segment(${previousPointLabel}, ${currentPointLabel})`);
 
-    api.setLabelVisible(divisionSecantLabel, false),
-    registerGroupMember(divisionSecantLabel, labelGroups.GROUP_DIVISION_SECANT);
+      api.setLabelVisible(divisionSecantLabel, false),
+      registerGroupMember(divisionSecantLabel, labelGroups.GROUP_DIVISION_SECANT);
+    }
 
     const secantSlopeLabel = await executeCreation(`s_{D${divisionIndex}} = (y(${previousPointLabel}) - y(${currentPointLabel})) / (x(${previousPointLabel}) - x(${currentPointLabel}))`);
 
@@ -305,10 +307,11 @@ const onAppletInit = async (api) => {
       const divisionLineLabel = await executeCreation(`V_{D${i}} = Segment((x(${divisionPointLabel}), 0), ${divisionPointLabel})`);
 
       registerGroupMember(divisionLineLabel, labelGroups.GROUP_DIVISION);
-      api.setLabelVisible(divisionLineLabel, false)
+      api.setLabelVisible(divisionLineLabel, false);
+      api.setLineThickness(divisionLineLabel, 10);
 
       if (previousPointLabel != null)
-        secantSlopeLabels.push(await setupDivisionAndGetSecantSlopeLabel(i - 1, previousPointLabel, divisionPointLabel));
+        secantSlopeLabels.push(await setupDivisionAndGetSecantSlopeLabel(i - 1, numberOfDivisions, previousPointLabel, divisionPointLabel));
 
       previousPointLabel = divisionPointLabel;
 
@@ -316,12 +319,12 @@ const onAppletInit = async (api) => {
         firstPointLabel = divisionPointLabel;
 
       if (i == numberOfDivisions + 1) {
+        const intervalSecantLabel = await executeCreation(`S_I = Segment(${firstPointLabel}, ${divisionPointLabel})`);
+
+        registerGroupMember(intervalSecantLabel, labelGroups.GROUP_INTERVAL_SECANT);
+        api.setLabelVisible(intervalSecantLabel, false);
+
         if (numberOfDivisions != 1) {
-          const intervalSecantLabel = await executeCreation(`S_I = Segment(${firstPointLabel}, ${divisionPointLabel})`);
-
-          registerGroupMember(intervalSecantLabel, labelGroups.GROUP_INTERVAL_SECANT);
-          api.setLabelVisible(intervalSecantLabel, false);
-
           const slopeLevelTermLabel = await executeCreation(`s_G = (${secantSlopeLabels.join("+")})/${numberOfDivisions}`);
 
           const levelTermAbscissaPointLabel = await solveDerivativeAbscissaAndMakePoint("μ", slopeLevelTermLabel, "A", "B");
