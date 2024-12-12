@@ -11,7 +11,7 @@ const onAppletInit = async (api) => {
   const executeCreation = (command, secondaryAliveListener, isPermanent) => {
     return new Promise((resolve, reject) => {
       // Need to be able to tell apart main- from secondary labels
-      if (command.includes('\n')) {
+      if (command.indexOf('\n') >= 0) {
         reject(`Encountered illegal command-count greater than one in command-string "${command}"`);
         return;
       }
@@ -43,7 +43,7 @@ const onAppletInit = async (api) => {
           if (isPermanent !== true)
             temporaryLabels.push(secondaryLabel);
 
-          if (unhandledAliveCallLabels.includes(secondaryLabel)) {
+          if (unhandledAliveCallLabels.indexOf(secondaryLabel) >= 0) {
             secondaryAliveListener(secondaryLabel);
             continue;
           }
@@ -52,7 +52,7 @@ const onAppletInit = async (api) => {
         }
       }
 
-      if (unhandledAliveCallLabels.includes(mainLabel)) {
+      if (unhandledAliveCallLabels.indexOf(mainLabel) >= 0) {
         resolve(mainLabel);
         return;
       }
