@@ -91,22 +91,24 @@ const onAppletInit = async (api) => {
   let checkboxUpdateHandlers = [];
 
   const labelGroups = {
-    GROUP_FUNCTION:           { color: "#00D0F5", labelTextColor: "#000000", title: "Function",           temporaryMembers: [], permanentMembers: [] },
-    GROUP_DERIVATIVE:         { color: "#FF0000", labelTextColor: "#000000", title: "Derivative",         temporaryMembers: [], permanentMembers: [] },
-    GROUP_QUADRATURE:         { color: "#00FF00", labelTextColor: "#000000", title: "Quadrature Area",    temporaryMembers: [], permanentMembers: [] },
-    GROUP_IRREGULAR:          { color: "#FF0000", labelTextColor: "#000000", title: "Irregular Area",     temporaryMembers: [], permanentMembers: [] },
-    GROUP_DIVISION:           { color: "#f8ba2a", labelTextColor: "#000000", title: "Division",           temporaryMembers: [], permanentMembers: [] },
-    GROUP_DIVISION_SECANT:    { color: "#000000", labelTextColor: "#FFFFFF", title: "Division Secant",    temporaryMembers: [], permanentMembers: [] },
-    GROUP_INTERVAL_SECANT:    { color: "#FF0000", labelTextColor: "#000000", title: "Interval Secant",    temporaryMembers: [], permanentMembers: [] },
-    GROUP_DIVISION_TANGENT:   { color: "#FF00FF", labelTextColor: "#000000", title: "Division Tangent",   temporaryMembers: [], permanentMembers: [] },
-    GROUP_LEVEL_TERM_TANGENT: { color: "#8000FF", labelTextColor: "#FFFFFF", title: "Level Term Tangent", temporaryMembers: [], permanentMembers: [] },
-    GROUP_LEVEL_TERM:         { color: "#8000FF", labelTextColor: "#FFFFFF", title: "Level Term",         temporaryMembers: [], permanentMembers: [] },
-    GROUP_MU_ABSCISSAS:       { color: "#000000", labelTextColor: "#FFFFFF", title: "μ Abscissas",        temporaryMembers: [], permanentMembers: [] },
-    GROUP_MU_ORDINATES:       { color: "#000000", labelTextColor: "#FFFFFF", title: "μ Ordinates",        temporaryMembers: [], permanentMembers: [] },
+    GROUP_FUNCTION:           { layer: 0, color: "#00D0F5", labelTextColor: "#000000", title: "Function",           temporaryMembers: [], permanentMembers: [] },
+    GROUP_DERIVATIVE:         { layer: 0, color: "#FF0000", labelTextColor: "#000000", title: "Derivative",         temporaryMembers: [], permanentMembers: [] },
+    GROUP_QUADRATURE:         { layer: 3, color: "#00FF00", labelTextColor: "#000000", title: "Quadrature Area",    temporaryMembers: [], permanentMembers: [] },
+    GROUP_IRREGULAR:          { layer: 2, color: "#FF0000", labelTextColor: "#000000", title: "Irregular Area",     temporaryMembers: [], permanentMembers: [] },
+    GROUP_DIVISION:           { layer: 4, color: "#f8ba2a", labelTextColor: "#000000", title: "Division",           temporaryMembers: [], permanentMembers: [] },
+    GROUP_DIVISION_SECANT:    { layer: 4, color: "#000000", labelTextColor: "#FFFFFF", title: "Division Secant",    temporaryMembers: [], permanentMembers: [] },
+    GROUP_INTERVAL_SECANT:    { layer: 4, color: "#FF0000", labelTextColor: "#000000", title: "Interval Secant",    temporaryMembers: [], permanentMembers: [] },
+    GROUP_DIVISION_TANGENT:   { layer: 4, color: "#FF00FF", labelTextColor: "#000000", title: "Division Tangent",   temporaryMembers: [], permanentMembers: [] },
+    GROUP_LEVEL_TERM_TANGENT: { layer: 4, color: "#8000FF", labelTextColor: "#FFFFFF", title: "Level Term Tangent", temporaryMembers: [], permanentMembers: [] },
+    GROUP_LEVEL_TERM:         { layer: 4, color: "#8000FF", labelTextColor: "#FFFFFF", title: "Level Term",         temporaryMembers: [], permanentMembers: [] },
+    GROUP_MU_ABSCISSAS:       { layer: 4, color: "#000000", labelTextColor: "#FFFFFF", title: "μ Abscissas",        temporaryMembers: [], permanentMembers: [] },
+    GROUP_MU_ORDINATES:       { layer: 4, color: "#000000", labelTextColor: "#FFFFFF", title: "μ Ordinates",        temporaryMembers: [], permanentMembers: [] },
+    GROUP_INTERVAL_BOUNDS:    { layer: 5, color: "#000000", labelTextColor: "#FFFFFF", title: "Interval Bounds",    temporaryMembers: [], permanentMembers: [] },
   };
 
   const registerGroupMember = (label, group, permanent) => {
     api.evalCommand(`SetColor(${label}, "${group.color}")`);
+    api.setLayer(label, group.layer);
 
     if (permanent === true)
       group.permanentMembers.push(label);
@@ -130,12 +132,14 @@ const onAppletInit = async (api) => {
       const checkboxLabel = await executeCreation(`b_g_{${++groupIndex}} = Checkbox()`, null, true);
       api.setLabelVisible(checkboxLabel, false);
       api.setValue(checkboxLabel, 1);
+      api.setLayer(checkboxLabel, 9);
       api.evalCommand(`SetCoords(${checkboxLabel}, 5, ${controlYOffset})`);
 
       const positionExpression = `AttachCopyToView((2,2), 1, (2,2), (0,0), (45,${controlYOffset} + 23), (0,0))`;
       const checkboxTextLabel = await executeCreation(`t_g_{${groupIndex}} = Text("${labelGroup.title}", ${positionExpression})`, null, true);
       api.evalCommand(`SetColor(${checkboxTextLabel}, "${labelGroup.labelTextColor}")`);
       api.evalCommand(`SetBackgroundColor(${checkboxTextLabel}, "${labelGroup.color}")`);
+      api.setLayer(checkboxTextLabel, 9);
       api.setFixed(checkboxTextLabel, 1);
 
       controlYOffset += 32;
@@ -319,7 +323,10 @@ const onAppletInit = async (api) => {
 
     const polygonLabel = await executeCreation(
       `Q_{f'} = Polygon(A, B, ${polygonPointBPrimeLabel}, ${polygonPointAPrimeLabel})`,
-      polygonVertexLabel => api.setLabelVisible(polygonVertexLabel, false)
+      polygonVertexLabel => {
+        api.setLabelVisible(polygonVertexLabel, false)
+        api.setLayer(polygonVertexLabel, labelGroups.GROUP_QUADRATURE.layer);
+      }
     );
 
     api.setLabelVisible(polygonLabel, false);
@@ -374,6 +381,9 @@ const onAppletInit = async (api) => {
   await executeCreation("b = 1", null, true);
   await executeCreation(`A = (a, y(yAxis))`, null, true);
   await executeCreation(`B = (b, y(yAxis))`, null, true);
+
+  registerGroupMember("A", labelGroups.GROUP_INTERVAL_BOUNDS, true);
+  registerGroupMember("B", labelGroups.GROUP_INTERVAL_BOUNDS, true);
 
   const derivativeAreaLabel = await executeCreation(`A_{f'} = Integral(${fPrimeLabel}, x(A), x(B))`, null, true);
 
