@@ -91,18 +91,18 @@ const onAppletInit = async (api) => {
   let checkboxUpdateHandlers = [];
 
   const labelGroups = {
-    GROUP_FUNCTION:           { color: "#00D0F5", title: "Function",           temporaryMembers: [], permanentMembers: [] },
-    GROUP_DERIVATIVE:         { color: "#FF0000", title: "Derivative",         temporaryMembers: [], permanentMembers: [] },
-    GROUP_QUADRATURE:         { color: "#00FF00", title: "Quadrature Area",    temporaryMembers: [], permanentMembers: [] },
-    GROUP_IRREGULAR:          { color: "#FF0000", title: "Irregular Area",     temporaryMembers: [], permanentMembers: [] },
-    GROUP_DIVISION:           { color: "#F58CF5", title: "Division",           temporaryMembers: [], permanentMembers: [] },
-    GROUP_DIVISION_SECANT:    { color: "#000000", title: "Division Secant",    temporaryMembers: [], permanentMembers: [] },
-    GROUP_INTERVAL_SECANT:    { color: "#FF0000", title: "Interval Secant",    temporaryMembers: [], permanentMembers: [] },
-    GROUP_DIVISION_TANGENT:   { color: "#FF00FF", title: "Division Tangent",   temporaryMembers: [], permanentMembers: [] },
-    GROUP_LEVEL_TERM_TANGENT: { color: "#8000FF", title: "Level Term Tangent", temporaryMembers: [], permanentMembers: [] },
-    GROUP_LEVEL_TERM:         { color: "#8000FF", title: "Level Term",         temporaryMembers: [], permanentMembers: [] },
-    GROUP_MU_ABSCISSAS:       { color: "#000000", title: "μ Abscissas",        temporaryMembers: [], permanentMembers: [] },
-    GROUP_MU_ORDINATES:       { color: "#000000", title: "μ Ordinates",        temporaryMembers: [], permanentMembers: [] },
+    GROUP_FUNCTION:           { color: "#00D0F5", labelTextColor: "#000000", title: "Function",           temporaryMembers: [], permanentMembers: [] },
+    GROUP_DERIVATIVE:         { color: "#FF0000", labelTextColor: "#000000", title: "Derivative",         temporaryMembers: [], permanentMembers: [] },
+    GROUP_QUADRATURE:         { color: "#00FF00", labelTextColor: "#000000", title: "Quadrature Area",    temporaryMembers: [], permanentMembers: [] },
+    GROUP_IRREGULAR:          { color: "#FF0000", labelTextColor: "#000000", title: "Irregular Area",     temporaryMembers: [], permanentMembers: [] },
+    GROUP_DIVISION:           { color: "#f8ba2a", labelTextColor: "#000000", title: "Division",           temporaryMembers: [], permanentMembers: [] },
+    GROUP_DIVISION_SECANT:    { color: "#000000", labelTextColor: "#FFFFFF", title: "Division Secant",    temporaryMembers: [], permanentMembers: [] },
+    GROUP_INTERVAL_SECANT:    { color: "#FF0000", labelTextColor: "#000000", title: "Interval Secant",    temporaryMembers: [], permanentMembers: [] },
+    GROUP_DIVISION_TANGENT:   { color: "#FF00FF", labelTextColor: "#000000", title: "Division Tangent",   temporaryMembers: [], permanentMembers: [] },
+    GROUP_LEVEL_TERM_TANGENT: { color: "#8000FF", labelTextColor: "#FFFFFF", title: "Level Term Tangent", temporaryMembers: [], permanentMembers: [] },
+    GROUP_LEVEL_TERM:         { color: "#8000FF", labelTextColor: "#FFFFFF", title: "Level Term",         temporaryMembers: [], permanentMembers: [] },
+    GROUP_MU_ABSCISSAS:       { color: "#000000", labelTextColor: "#FFFFFF", title: "μ Abscissas",        temporaryMembers: [], permanentMembers: [] },
+    GROUP_MU_ORDINATES:       { color: "#000000", labelTextColor: "#FFFFFF", title: "μ Ordinates",        temporaryMembers: [], permanentMembers: [] },
   };
 
   const registerGroupMember = (label, group, permanent) => {
@@ -128,9 +128,16 @@ const onAppletInit = async (api) => {
       const labelGroup = labelGroups[groupKey];
 
       const checkboxLabel = await executeCreation(`b_g_{${++groupIndex}} = Checkbox()`, null, true);
-      api.setCaption(checkboxLabel, labelGroup.title);
+      api.setLabelVisible(checkboxLabel, false);
       api.setValue(checkboxLabel, 1);
       api.evalCommand(`SetCoords(${checkboxLabel}, 5, ${controlYOffset})`);
+
+      const positionExpression = `AttachCopyToView((2,2), 1, (2,2), (0,0), (45,${controlYOffset} + 23), (0,0))`;
+      const checkboxTextLabel = await executeCreation(`t_g_{${groupIndex}} = Text("${labelGroup.title}", ${positionExpression})`, null, true);
+      api.evalCommand(`SetColor(${checkboxTextLabel}, "${labelGroup.labelTextColor}")`);
+      api.evalCommand(`SetBackgroundColor(${checkboxTextLabel}, "${labelGroup.color}")`);
+      api.setFixed(checkboxTextLabel, 1);
+
       controlYOffset += 32;
 
       const updateHandler = () => {
