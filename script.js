@@ -249,57 +249,7 @@ const onAppletInit = async (api) => {
     return secantSlopeLabel
   };
 
-  const setupDivisions = async (numberOfDivisions) => {
-    const secantSlopeLabels = [];
-
-    let previousPointLabel = null;
-    let firstPointLabel = null;
-    let levelTermAbscissaPointLabel = null;
-
-    // One more division, as the end of the last is the beginning of n+1
-    for (let i = 1; i <= numberOfDivisions + 1; ++i) {
-      const abscissaLabel = await executeCreation(`x_{D${i}} = x_{AB}(${i})`);
-
-      const divisionPointLabel = await executeCreation(`F_{D${i}} = (${abscissaLabel}, f(${abscissaLabel}))`);
-
-      registerGroupMember(divisionPointLabel, labelGroups.GROUP_DIVISION);
-      api.setLabelVisible(divisionPointLabel, false)
-
-      const divisionLineLabel = await executeCreation(`V_{D${i}} = Segment((x(${divisionPointLabel}), 0), ${divisionPointLabel})`);
-
-      registerGroupMember(divisionLineLabel, labelGroups.GROUP_DIVISION);
-      api.setLabelVisible(divisionLineLabel, false)
-
-      if (previousPointLabel != null)
-        secantSlopeLabels.push(await setupDivisionAndGetSecantSlopeLabel(i - 1, previousPointLabel, divisionPointLabel));
-
-      previousPointLabel = divisionPointLabel;
-
-      if (firstPointLabel == null)
-        firstPointLabel = divisionPointLabel;
-
-      if (numberOfDivisions != 1 && i == numberOfDivisions + 1) {
-        const intervalSecantLabel = await executeCreation(`S_I = Segment(${firstPointLabel}, ${divisionPointLabel})`);
-
-        registerGroupMember(intervalSecantLabel, labelGroups.GROUP_INTERVAL_SECANT);
-        api.setLabelVisible(intervalSecantLabel, false);
-
-        const slopeLevelTermLabel = await executeCreation(`s_G = (${secantSlopeLabels.join("+")})/${numberOfDivisions}`);
-
-        levelTermAbscissaPointLabel = await solveDerivativeAbscissaAndMakePoint("μ", slopeLevelTermLabel, "A", "B");
-
-        registerGroupMember(levelTermAbscissaPointLabel, labelGroups.GROUP_LEVEL_TERM);
-
-        await makeTangentSegment(
-          `G`, levelTermAbscissaPointLabel, slopeLevelTermLabel,
-          label => registerGroupMember(label, labelGroups.GROUP_LEVEL_TERM_TANGENT)
-        );
-      }
-
-      else
-        levelTermAbscissaPointLabel = "μ_1";
-    }
-
+  const setupQuadraturePolygonAndPossiblyMuSegment = async (levelTermAbscissaPointLabel) => {
     const derivativePointLabel = await executeCreation(`L_{f'} = Point({x(${levelTermAbscissaPointLabel}), f'(x(${levelTermAbscissaPointLabel}))})`);
 
     if (levelTermAbscissaPointLabel != "μ_1") {
@@ -333,6 +283,61 @@ const onAppletInit = async (api) => {
     api.setFilling(polygonLabel, .3);
 
     registerGroupMember(polygonLabel, labelGroups.GROUP_QUADRATURE);
+  }
+
+  const setupDivisions = async (numberOfDivisions) => {
+    const secantSlopeLabels = [];
+
+    let previousPointLabel = null;
+    let firstPointLabel = null;
+
+    // One more division, as the end of the last is the beginning of n+1
+    for (let i = 1; i <= numberOfDivisions + 1; ++i) {
+      const abscissaLabel = await executeCreation(`x_{D${i}} = x_{AB}(${i})`);
+
+      const divisionPointLabel = await executeCreation(`F_{D${i}} = (${abscissaLabel}, f(${abscissaLabel}))`);
+
+      registerGroupMember(divisionPointLabel, labelGroups.GROUP_DIVISION);
+      api.setLabelVisible(divisionPointLabel, false)
+
+      const divisionLineLabel = await executeCreation(`V_{D${i}} = Segment((x(${divisionPointLabel}), 0), ${divisionPointLabel})`);
+
+      registerGroupMember(divisionLineLabel, labelGroups.GROUP_DIVISION);
+      api.setLabelVisible(divisionLineLabel, false)
+
+      if (previousPointLabel != null)
+        secantSlopeLabels.push(await setupDivisionAndGetSecantSlopeLabel(i - 1, previousPointLabel, divisionPointLabel));
+
+      previousPointLabel = divisionPointLabel;
+
+      if (firstPointLabel == null)
+        firstPointLabel = divisionPointLabel;
+
+      if (i == numberOfDivisions + 1) {
+        if (numberOfDivisions != 1) {
+          const intervalSecantLabel = await executeCreation(`S_I = Segment(${firstPointLabel}, ${divisionPointLabel})`);
+
+          registerGroupMember(intervalSecantLabel, labelGroups.GROUP_INTERVAL_SECANT);
+          api.setLabelVisible(intervalSecantLabel, false);
+
+          const slopeLevelTermLabel = await executeCreation(`s_G = (${secantSlopeLabels.join("+")})/${numberOfDivisions}`);
+
+          const levelTermAbscissaPointLabel = await solveDerivativeAbscissaAndMakePoint("μ", slopeLevelTermLabel, "A", "B");
+          registerGroupMember(levelTermAbscissaPointLabel, labelGroups.GROUP_LEVEL_TERM);
+
+          await setupQuadraturePolygonAndPossiblyMuSegment(levelTermAbscissaPointLabel);
+
+          await makeTangentSegment(
+            `G`, levelTermAbscissaPointLabel, slopeLevelTermLabel,
+            label => registerGroupMember(label, labelGroups.GROUP_LEVEL_TERM_TANGENT)
+          );
+
+          return;
+        }
+
+        await setupQuadraturePolygonAndPossiblyMuSegment("μ_1");
+      }
+    }
   };
 
   await setupGroupCheckboxes();
