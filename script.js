@@ -144,7 +144,7 @@ const onAppletInit = async (api) => {
       api.evalCommand(`SetColor(${checkboxTextLabel}, "${labelGroup.labelTextColor}")`);
       api.evalCommand(`SetBackgroundColor(${checkboxTextLabel}, "${labelGroup.color}")`);
       api.setLayer(checkboxTextLabel, 9);
-      api.setFixed(checkboxTextLabel, 1);
+      api.setFixed(checkboxTextLabel, true, true);
 
       const updateHandler = () => {
         const visibility = api.getValue(checkboxLabel) == 1;
@@ -347,6 +347,8 @@ const onAppletInit = async (api) => {
   // Number of equally sized divisions between A and B
   const sliderLabel = await executeCreation("k = Slider(1, 6, 1)", null, true);
 
+  api.setFixed(sliderLabel, true, true);
+
   controlYOffset += 50;
 
   api.evalCommand(`SetCoords(${sliderLabel}, 25, ${controlYOffset})`);
@@ -373,6 +375,8 @@ const onAppletInit = async (api) => {
   registerGroupMember(fLabel, labelGroups.GROUP_FUNCTION, true);
 
   const inputBoxLabel = await executeCreation(`InputBox(${fLabel})`, null, true);
+
+  api.setFixed(inputBoxLabel, true, true);
 
   controlYOffset += 50;
 
