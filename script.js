@@ -87,23 +87,24 @@ const onAppletInit = async (api) => {
   // Scene definition
   // ================================================================================
 
-  let controlYOffset = 0;
+  // Will be inaccessible behind the top-left corner's undo/redo otherwise
+  let controlYOffset = 80;
   let checkboxUpdateHandlers = [];
 
   const labelGroups = {
-    GROUP_FUNCTION:           { layer: 0, color: "#00D0F5", labelTextColor: "#000000", title: "Function",           temporaryMembers: [], permanentMembers: [] },
-    GROUP_DERIVATIVE:         { layer: 0, color: "#FF0000", labelTextColor: "#000000", title: "Derivative",         temporaryMembers: [], permanentMembers: [] },
-    GROUP_QUADRATURE:         { layer: 3, color: "#00FF00", labelTextColor: "#000000", title: "Quadrature Area",    temporaryMembers: [], permanentMembers: [] },
-    GROUP_IRREGULAR:          { layer: 2, color: "#FF0000", labelTextColor: "#000000", title: "Irregular Area",     temporaryMembers: [], permanentMembers: [] },
-    GROUP_DIVISION:           { layer: 4, color: "#f8ba2a", labelTextColor: "#000000", title: "Division",           temporaryMembers: [], permanentMembers: [] },
-    GROUP_DIVISION_SECANT:    { layer: 4, color: "#000000", labelTextColor: "#FFFFFF", title: "Division Secant",    temporaryMembers: [], permanentMembers: [] },
-    GROUP_INTERVAL_SECANT:    { layer: 4, color: "#FF0000", labelTextColor: "#000000", title: "Interval Secant",    temporaryMembers: [], permanentMembers: [] },
-    GROUP_DIVISION_TANGENT:   { layer: 4, color: "#FF00FF", labelTextColor: "#000000", title: "Division Tangent",   temporaryMembers: [], permanentMembers: [] },
-    GROUP_LEVEL_TERM_TANGENT: { layer: 4, color: "#8000FF", labelTextColor: "#FFFFFF", title: "Level Term Tangent", temporaryMembers: [], permanentMembers: [] },
-    GROUP_LEVEL_TERM:         { layer: 4, color: "#8000FF", labelTextColor: "#FFFFFF", title: "Level Term",         temporaryMembers: [], permanentMembers: [] },
-    GROUP_MU_ABSCISSAS:       { layer: 4, color: "#000000", labelTextColor: "#FFFFFF", title: "μ Abscissas",        temporaryMembers: [], permanentMembers: [] },
-    GROUP_MU_ORDINATES:       { layer: 4, color: "#000000", labelTextColor: "#FFFFFF", title: "μ Ordinates",        temporaryMembers: [], permanentMembers: [] },
-    GROUP_INTERVAL_BOUNDS:    { layer: 5, color: "#000000", labelTextColor: "#FFFFFF", title: "Interval Bounds",    temporaryMembers: [], permanentMembers: [] },
+    GROUP_FUNCTION:           { layer: 0, color: "#00d8f5", labelTextColor: "#000000", title: "Function",            temporaryMembers: [], permanentMembers: [] },
+    GROUP_DERIVATIVE:         { layer: 0, color: "#FF0000", labelTextColor: "#000000", title: "Derivative",          temporaryMembers: [], permanentMembers: [] },
+    GROUP_QUADRATURE:         { layer: 3, color: "#00FF00", labelTextColor: "#000000", title: "Quadrature Area",     temporaryMembers: [], permanentMembers: [] },
+    GROUP_IRREGULAR:          { layer: 2, color: "#FF0000", labelTextColor: "#000000", title: "Irregular Area",      temporaryMembers: [], permanentMembers: [] },
+    GROUP_DIVISION:           { layer: 4, color: "#f8ba2a", labelTextColor: "#000000", title: "Column Dividers",     temporaryMembers: [], permanentMembers: [] },
+    GROUP_DIVISION_SECANT:    { layer: 4, color: "#000000", labelTextColor: "#FFFFFF", title: "Division Secant",     temporaryMembers: [], permanentMembers: [] },
+    GROUP_INTERVAL_SECANT:    { layer: 4, color: "#1e00ff", labelTextColor: "#FFFFFF", title: "Interval Secant",     temporaryMembers: [], permanentMembers: [] },
+    GROUP_DIVISION_TANGENT:   { layer: 4, color: "#FF00FF", labelTextColor: "#FFFFFF", title: "Division Tangent",    temporaryMembers: [], permanentMembers: [] },
+    GROUP_LEVEL_TERM_TANGENT: { layer: 4, color: "#8000FF", labelTextColor: "#FFFFFF", title: "Level Term Tangent",  temporaryMembers: [], permanentMembers: [] },
+    GROUP_LEVEL_TERM:         { layer: 4, color: "#8000FF", labelTextColor: "#FFFFFF", title: "Level Term Ordinate", temporaryMembers: [], permanentMembers: [] },
+    GROUP_MU_ABSCISSAS:       { layer: 4, color: "#FF00FF", labelTextColor: "#FFFFFF", title: "μ Abscissas",         temporaryMembers: [], permanentMembers: [] },
+    GROUP_MU_ORDINATES:       { layer: 4, color: "#FF00FF", labelTextColor: "#FFFFFF", title: "μ Ordinates",         temporaryMembers: [], permanentMembers: [] },
+    GROUP_INTERVAL_BOUNDS:    { layer: 5, color: "#000000", labelTextColor: "#FFFFFF", title: "Interval Bounds",     temporaryMembers: [], permanentMembers: [] },
   };
 
   const registerGroupMember = (label, group, permanent) => {
@@ -209,6 +210,7 @@ const onAppletInit = async (api) => {
     const segmentLabel = await executeCreation(`t_s_{${labelNamePart}} = Segment((${sX}, ${tangentFunctionLabel}(${sX})), (${eX}, ${tangentFunctionLabel}(${eX})))`);
 
     api.setLabelVisible(segmentLabel, false);
+    patchLineStyleOpacity(segmentLabel, 255);
 
     if (pointAndSegmentLabelCallback)
       pointAndSegmentLabelCallback(segmentLabel);
@@ -227,6 +229,7 @@ const onAppletInit = async (api) => {
 
       api.setLabelVisible(divisionSecantLabel, false),
       registerGroupMember(divisionSecantLabel, labelGroups.GROUP_DIVISION_SECANT);
+      patchLineStyleOpacity(divisionSecantLabel, 255);
     }
 
     const secantSlopeLabel = await executeCreation(`s_{D${divisionIndex}} = (y(${previousPointLabel}) - y(${currentPointLabel})) / (x(${previousPointLabel}) - x(${currentPointLabel}))`);
@@ -249,6 +252,7 @@ const onAppletInit = async (api) => {
 
     api.setLabelVisible(fPrimeLineLabel, false)
     registerGroupMember(fPrimeLineLabel, labelGroups.GROUP_MU_ORDINATES);
+    patchLineStyleOpacity(fPrimeLineLabel, 255);
 
     return secantSlopeLabel
   };
@@ -264,6 +268,7 @@ const onAppletInit = async (api) => {
 
       registerGroupMember(derivativeLineLabel, labelGroups.GROUP_LEVEL_TERM);
       api.setLabelVisible(derivativeLineLabel, false);
+      patchLineStyleOpacity(derivativeLineLabel, 255);
     }
 
     else
@@ -289,6 +294,16 @@ const onAppletInit = async (api) => {
     registerGroupMember(polygonLabel, labelGroups.GROUP_QUADRATURE);
   }
 
+  const patchLineStyleOpacity = (objectLabel, value) => {
+    const xml = api.getXML(objectLabel);
+    const tagMarker = '<lineStyle ';
+    const tagMarkerBegin = xml.indexOf(tagMarker);
+    const valueMarker = 'opacity="';
+    const valueMarkerBegin = xml.indexOf(valueMarker, tagMarkerBegin + tagMarker.length);
+    const valueEnd = xml.indexOf("\"", valueMarkerBegin + valueMarker.length);
+    api.evalXML(xml.substring(0, valueMarkerBegin) + `opacity="${value}"` + xml.substring(valueEnd + 1));
+  };
+
   const setupDivisions = async (numberOfDivisions) => {
     const secantSlopeLabels = [];
 
@@ -308,7 +323,8 @@ const onAppletInit = async (api) => {
 
       registerGroupMember(divisionLineLabel, labelGroups.GROUP_DIVISION);
       api.setLabelVisible(divisionLineLabel, false);
-      api.setLineThickness(divisionLineLabel, 10);
+      api.setLineThickness(divisionLineLabel, 12);
+      patchLineStyleOpacity(divisionLineLabel, 255);
 
       if (previousPointLabel != null)
         secantSlopeLabels.push(await setupDivisionAndGetSecantSlopeLabel(i - 1, numberOfDivisions, previousPointLabel, divisionPointLabel));
@@ -323,6 +339,7 @@ const onAppletInit = async (api) => {
 
         registerGroupMember(intervalSecantLabel, labelGroups.GROUP_INTERVAL_SECANT);
         api.setLabelVisible(intervalSecantLabel, false);
+        patchLineStyleOpacity(intervalSecantLabel, 255);
 
         if (numberOfDivisions != 1) {
           const slopeLevelTermLabel = await executeCreation(`s_G = (${secantSlopeLabels.join("+")})/${numberOfDivisions}`);
