@@ -37,7 +37,7 @@ const onAppletInit = async (api) => {
         temporaryLabels.push(mainLabel);
 
       if (typeof secondaryAliveListener === 'function') {
-        for (let i = 1; i < mainLabel.length; ++i) {
+        for (let i = 1; i < createdLabels.length; ++i) {
           const secondaryLabel = createdLabels[i];
 
           if (isPermanent !== true)
@@ -123,6 +123,16 @@ const onAppletInit = async (api) => {
       labelGroups[groupKeys[groupKeyIndex]].temporaryMembers = [];
   };
 
+  const createAttachedText = async (x, y, label, isPermanent, value, color, backgroundColor) => {
+    const positionExpression = `AttachCopyToView((1,1), 1, (1,1), (0,0), (${x},${y} + 23), (0,0))`;
+    const textLabel = await executeCreation(`${label} = Text(${value}, ${positionExpression})`, null, isPermanent);
+    api.evalCommand(`SetColor(${textLabel}, "${color}")`);
+    api.evalCommand(`SetBackgroundColor(${textLabel}, "${backgroundColor}")`);
+    api.setLayer(textLabel, 9);
+    api.setFixed(textLabel, true, true);
+    return textLabel;
+  };
+
   const setupGroupCheckboxes = async () => {
     checkboxUpdateHandlers = [];
 
@@ -140,12 +150,11 @@ const onAppletInit = async (api) => {
       api.setLayer(checkboxLabel, 9);
       api.evalCommand(`SetCoords(${checkboxLabel}, 5, ${groupOffset})`);
 
-      const positionExpression = `AttachCopyToView((1,1), 1, (1,1), (0,0), (45,${groupOffset} + 23), (0,0))`;
-      const checkboxTextLabel = await executeCreation(`t_g_{${groupIndex}} = Text("${labelGroup.title}", ${positionExpression})`, null, true);
-      api.evalCommand(`SetColor(${checkboxTextLabel}, "${labelGroup.labelTextColor}")`);
-      api.evalCommand(`SetBackgroundColor(${checkboxTextLabel}, "${labelGroup.color}")`);
-      api.setLayer(checkboxTextLabel, 9);
-      api.setFixed(checkboxTextLabel, true, true);
+      await createAttachedText(
+        45, groupOffset, `t_g_{${groupIndex}}`, true,
+        `"${labelGroup.title}"`,
+        labelGroup.labelTextColor, labelGroup.color
+      );
 
       const updateHandler = () => {
         const visibility = api.getValue(checkboxLabel) == 1;
@@ -292,6 +301,20 @@ const onAppletInit = async (api) => {
     api.setFilling(polygonLabel, .3);
 
     registerGroupMember(polygonLabel, labelGroups.GROUP_QUADRATURE);
+
+    await createAttachedText(
+      15, controlYOffset + 50, `A_{Qf'}`, false,
+      `"Quadrature Area: " + Q_{f'}`,
+      labelGroups.GROUP_QUADRATURE.labelTextColor,
+      labelGroups.GROUP_QUADRATURE.color,
+    );
+
+    await createAttachedText(
+      15, controlYOffset + 80, `A_{If'}`, false,
+      `"Irregular Area: " + A_{f'}`,
+      labelGroups.GROUP_IRREGULAR.labelTextColor,
+      labelGroups.GROUP_IRREGULAR.color,
+    );
   }
 
   const patchLineStyleOpacity = (objectLabel, value) => {
@@ -401,7 +424,7 @@ const onAppletInit = async (api) => {
   controlYOffset += 50;
 
   api.evalCommand(`SetCoords(${inputBoxLabel}, 10, ${controlYOffset})`);
-  api.setCaption(inputBoxLabel, "f(x)");
+  api.setCaption(inputBoxLabel, "$f(x)$");
 
   const fPrimeLabel = await executeCreation(`f'(x) = Derivative(${fLabel})`, null, true);
 
