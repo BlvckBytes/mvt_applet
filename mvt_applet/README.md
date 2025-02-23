@@ -1,0 +1,1 @@
+In order to create a GGB-file, substitute the contents of `geogebra_javascript.js` with the promise-polyfilled, es5-transpiled source of the applet, then zip the *contents* of this folder via `zip -r mvt_applet.ggb *`, as to have them be top-level elements of the zip.
