@@ -468,11 +468,27 @@ var onAppletInit = /*#__PURE__*/function () {
               temporaryMembers: [],
               permanentMembers: []
             },
+            GROUP_DIVISION_TANGENT_SLOPES: {
+              layer: 4,
+              color: "#FF00FF",
+              labelTextColor: "#FFFFFF",
+              title: "Division Tangent Slopes",
+              temporaryMembers: [],
+              permanentMembers: []
+            },
             GROUP_LEVEL_TERM_TANGENT: {
               layer: 4,
               color: "#8000FF",
               labelTextColor: "#FFFFFF",
               title: "Level Term Tangent",
+              temporaryMembers: [],
+              permanentMembers: []
+            },
+            GROUP_LEVEL_TERM_TANGENT_SLOPE: {
+              layer: 4,
+              color: "#8000FF",
+              labelTextColor: "#FFFFFF",
+              title: "Level Term Tangent Slope",
               temporaryMembers: [],
               permanentMembers: []
             },
@@ -659,7 +675,8 @@ var onAppletInit = /*#__PURE__*/function () {
                     pointLabel = _context4.sent;
                     api.setLabelVisible(pointLabel, false);
                     if (pointAndSegmentLabelCallback) pointAndSegmentLabelCallback(pointLabel);
-                  case 21:
+                    return _context4.abrupt("return", pointLabel);
+                  case 22:
                   case "end":
                     return _context4.stop();
                 }
@@ -671,7 +688,7 @@ var onAppletInit = /*#__PURE__*/function () {
           }();
           setupDivisionAndGetSecantSlopeLabel = /*#__PURE__*/function () {
             var _ref5 = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee4(divisionIndex, numberOfDivisions, previousPointLabel, currentPointLabel) {
-              var divisionSecantLabel, secantSlopeLabel, abscissaPointLabel, fPrimePointLabel, fPrimeLineLabel;
+              var divisionSecantLabel, secantSlopeLabel, abscissaPointLabel, tangentPointLabel, tangentSlopeLabel, fPrimePointLabel, fPrimeLineLabel;
               return _regeneratorRuntime().wrap(function _callee4$(_context5) {
                 while (1) switch (_context5.prev = _context5.next) {
                   case 0:
@@ -700,21 +717,28 @@ var onAppletInit = /*#__PURE__*/function () {
                       return registerGroupMember(label, labelGroups.GROUP_DIVISION_TANGENT);
                     });
                   case 15:
-                    _context5.next = 17;
+                    tangentPointLabel = _context5.sent;
+                    _context5.next = 18;
+                    return executeCreation("T_{\u03BC".concat(divisionIndex, "} = Text(FractionText(").concat(secantSlopeLabel, "), ").concat(tangentPointLabel, ", true, true, 0, 1)"));
+                  case 18:
+                    tangentSlopeLabel = _context5.sent;
+                    api.evalCommand("SetBackgroundColor(".concat(tangentSlopeLabel, ", \"#000000\")"));
+                    registerGroupMember(tangentSlopeLabel, labelGroups.GROUP_DIVISION_TANGENT_SLOPES);
+                    _context5.next = 23;
                     return executeCreation("F_{\u03BC".concat(divisionIndex, "} = (x(").concat(abscissaPointLabel, "), f'(x(").concat(abscissaPointLabel, ")))"));
-                  case 17:
+                  case 23:
                     fPrimePointLabel = _context5.sent;
                     api.setLabelVisible(fPrimePointLabel, false);
                     registerGroupMember(fPrimePointLabel, labelGroups.GROUP_MU_ORDINATES);
-                    _context5.next = 22;
+                    _context5.next = 28;
                     return executeCreation("V_{\u03BC".concat(divisionIndex, "} = Segment(").concat(fPrimePointLabel, ", ").concat(abscissaPointLabel, ")"));
-                  case 22:
+                  case 28:
                     fPrimeLineLabel = _context5.sent;
                     api.setLabelVisible(fPrimeLineLabel, false);
                     registerGroupMember(fPrimeLineLabel, labelGroups.GROUP_MU_ORDINATES);
                     patchLineStyleOpacity(fPrimeLineLabel, 255);
                     return _context5.abrupt("return", secantSlopeLabel);
-                  case 27:
+                  case 33:
                   case "end":
                     return _context5.stop();
                 }
@@ -798,7 +822,7 @@ var onAppletInit = /*#__PURE__*/function () {
           };
           setupDivisions = /*#__PURE__*/function () {
             var _ref7 = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee6(numberOfDivisions) {
-              var secantSlopeLabels, previousPointLabel, firstPointLabel, i, abscissaLabel, divisionPointLabel, divisionLineLabel, intervalSecantLabel, slopeLevelTermLabel, levelTermAbscissaPointLabel;
+              var secantSlopeLabels, previousPointLabel, firstPointLabel, i, abscissaLabel, divisionPointLabel, divisionLineLabel, intervalSecantLabel, slopeLevelTermLabel, levelTermAbscissaPointLabel, tangentPointLabel, tangentSlopeLabel;
               return _regeneratorRuntime().wrap(function _callee6$(_context7) {
                 while (1) switch (_context7.prev = _context7.next) {
                   case 0:
@@ -808,7 +832,7 @@ var onAppletInit = /*#__PURE__*/function () {
                     i = 1;
                   case 4:
                     if (!(i <= numberOfDivisions + 1)) {
-                      _context7.next = 53;
+                      _context7.next = 59;
                       break;
                     }
                     _context7.next = 7;
@@ -843,7 +867,7 @@ var onAppletInit = /*#__PURE__*/function () {
                     previousPointLabel = divisionPointLabel;
                     if (firstPointLabel == null) firstPointLabel = divisionPointLabel;
                     if (!(i == numberOfDivisions + 1)) {
-                      _context7.next = 50;
+                      _context7.next = 56;
                       break;
                     }
                     _context7.next = 31;
@@ -854,7 +878,7 @@ var onAppletInit = /*#__PURE__*/function () {
                     api.setLabelVisible(intervalSecantLabel, false);
                     patchLineStyleOpacity(intervalSecantLabel, 255);
                     if (!(numberOfDivisions != 1)) {
-                      _context7.next = 48;
+                      _context7.next = 54;
                       break;
                     }
                     _context7.next = 38;
@@ -874,15 +898,22 @@ var onAppletInit = /*#__PURE__*/function () {
                       return registerGroupMember(label, labelGroups.GROUP_LEVEL_TERM_TANGENT);
                     });
                   case 47:
-                    return _context7.abrupt("return");
-                  case 48:
+                    tangentPointLabel = _context7.sent;
                     _context7.next = 50;
-                    return setupQuadraturePolygonAndPossiblyMuSegment("μ_1");
+                    return executeCreation("T_\u03BC = Text(FractionText(".concat(slopeLevelTermLabel, "), ").concat(tangentPointLabel, ", true, true, 0, 1)"));
                   case 50:
+                    tangentSlopeLabel = _context7.sent;
+                    api.evalCommand("SetBackgroundColor(".concat(tangentSlopeLabel, ", \"#000000\")"));
+                    registerGroupMember(tangentSlopeLabel, labelGroups.GROUP_LEVEL_TERM_TANGENT_SLOPE);
+                    return _context7.abrupt("return");
+                  case 54:
+                    _context7.next = 56;
+                    return setupQuadraturePolygonAndPossiblyMuSegment("μ_1");
+                  case 56:
                     ++i;
                     _context7.next = 4;
                     break;
-                  case 53:
+                  case 59:
                   case "end":
                     return _context7.stop();
                 }
